@@ -1,0 +1,9 @@
+gitdb==4.0.11
+GitPython==3.1.43
+pyasn1==0.6.0
+PyQt5==5.15.10
+PyQt5-Qt5==5.15.14
+PyQt5-sip==12.13.0
+PySimpleGUI==5.0.5
+rsa==4.9
+smmap==5.0.1
