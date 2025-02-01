@@ -14,8 +14,7 @@ from git_utils import GitRepository
 
 class GitDiffApp(QWidget):
     """
-    GitDiffApp クラスは、Git リポジトリのブランチ間差分（diff）を生成するための GUI を実装しています。
-    ユーザーがリポジトリを選択し、ブランチを指定すると、差分を画面上に表示しファイルにも保存します。
+    GitDiffApp クラスは、Git リポジトリのブランチ間差分を生成するための GUI を実装しています。
     """
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
@@ -52,19 +51,13 @@ class GitDiffApp(QWidget):
         self.branch2_combo.setEnabled(False)
         self.main_layout.addWidget(self.branch2_combo)
 
-        # ブランチ読み込みボタン
-        self.load_branches_button = QPushButton("Load Branches")
-        self.load_branches_button.setEnabled(False)
-        self.load_branches_button.clicked.connect(self.load_branches)
-        self.main_layout.addWidget(self.load_branches_button)
-
-        # diff 生成ボタン
+        # 差分生成ボタン
         self.generate_diff_button = QPushButton("Generate Diff")
         self.generate_diff_button.setEnabled(False)
         self.generate_diff_button.clicked.connect(self.generate_diff)
         self.main_layout.addWidget(self.generate_diff_button)
 
-        # diff 表示ウィジェット
+        # 差分表示ウィジェット
         self.diff_summary_label = QLabel("")
         self.main_layout.addWidget(self.diff_summary_label)
 
@@ -77,27 +70,28 @@ class GitDiffApp(QWidget):
 
     def select_repo(self) -> None:
         """
-        リポジトリのディレクトリをユーザーに選択させ、GitRepository クラスのインスタンスを生成する。
+        ユーザーにリポジトリのディレクトリを選択させ、選択後に自動でブランチを読み込みます。
         """
         selected_path = QFileDialog.getExistingDirectory(self, "Select Repository")
         if selected_path and os.path.isdir(selected_path):
             try:
+                # Git リポジトリの検証とインスタンス生成
                 self.repo = GitRepository(selected_path)
                 self.repo_path_label.setText(f"Repository Path: {selected_path}")
-                self.load_branches_button.setEnabled(True)
+                # リポジトリ選択後、自動的にブランチを読み込む
+                self.load_branches()
             except ValueError:
                 QMessageBox.critical(
                     self, "Error", "The selected directory is not a valid Git repository."
                 )
                 self.repo = None
                 self.repo_path_label.setText("Repository Path:")
-                self.load_branches_button.setEnabled(False)
         else:
             QMessageBox.critical(self, "Error", "Invalid repository path.")
 
     def load_branches(self) -> None:
         """
-        選択したリポジトリからブランチ一覧を取得し、コンボボックスにセットする。
+        選択したリポジトリからブランチ一覧を取得し、コンボボックスにセットします。
         """
         if self.repo is None:
             QMessageBox.critical(self, "Error", "Please select a repository first.")
@@ -106,7 +100,9 @@ class GitDiffApp(QWidget):
         try:
             branches = self.repo.get_branches()
             if not branches:
-                QMessageBox.information(self, "No Branches", "No branches found in the repository.")
+                QMessageBox.information(
+                    self, "No Branches", "No branches found in the repository."
+                )
                 return
 
             self.branch1_combo.clear()
@@ -121,7 +117,7 @@ class GitDiffApp(QWidget):
 
     def generate_diff(self) -> None:
         """
-        選択された2つのブランチ間で diff を生成し、結果を表示・保存する。
+        選択された2つのブランチ間で diff を生成し、結果を表示・保存します。
         """
         if self.repo is None:
             QMessageBox.critical(self, "Error", "Please select a repository first.")
@@ -140,7 +136,9 @@ class GitDiffApp(QWidget):
             QMessageBox.critical(self, "Error", f"Error during diff generation: {e}")
 
     def display_diff_result(self, diff: str) -> None:
-        # self.repoがNoneの場合はエラーメッセージを表示して早期リターンする
+        """
+        生成された diff を画面に表示し、ファイルにも保存します。
+        """
         if self.repo is None:
             QMessageBox.critical(self, "Error", "Repository is not set.")
             return
@@ -159,10 +157,9 @@ class GitDiffApp(QWidget):
             self.diff_text_area.setPlainText(diff)
             self.diff_text_area.setVisible(True)
 
-
     def save_diff_to_file(self, diff: str, file_path: str) -> None:
         """
-        生成した diff を指定されたファイルに保存する。
+        生成した diff を指定されたファイルに保存します。
         """
         try:
             with open(file_path, "w", encoding="utf-8") as file:
